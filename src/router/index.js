@@ -3,6 +3,8 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 // 登录
 import login from '../views/login/index'
+//
+import userList from '../views/userList/index'
 Vue.use(VueRouter)
 
 const routes = [
@@ -12,7 +14,13 @@ const routes = [
     component: Home,
     meta: { // 路由的数据
       Authorition: true
-    }
+    },
+    children: [
+      {
+        path: '',
+        component: userList
+      }
+    ]
   },
   {
     path: '/',

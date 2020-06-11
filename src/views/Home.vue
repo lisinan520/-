@@ -27,13 +27,14 @@
             background-color="#363d40"
             text-color="#fff"
             @close="handleClose"
+            :router="true"
           >
             <el-submenu index="1">
               <template slot="title">
                 <i class="el-icon-user-solid"></i>
                 <span>用户管理</span>
               </template>
-              <el-menu-item index="1-1">
+              <el-menu-item index="home">
                 <i class="el-icon-s-grid"></i>
                 用户列表
                 </el-menu-item>
@@ -75,8 +76,11 @@
             </el-submenu>
           </el-menu>
           <!-- 结束 -->
+          <!-- 左侧导航结束 -->
         </el-aside>
-        <el-main>Main</el-main>
+        <el-main>
+          <router-view></router-view>
+        </el-main>
       </el-container>
     </el-container>
   </div>
@@ -120,7 +124,7 @@ export default {
 .el-main {
   background-color: #e9eef3;
   color: #333;
-  text-align: center;
-  line-height: 160px;
+  /* text-align: center; */
+  /* line-height: 160px; */
 }
 </style>

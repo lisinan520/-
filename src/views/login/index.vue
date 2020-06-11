@@ -28,24 +28,24 @@
 
 <script>
 export default {
-  name: "",
-  data() {
+  name: '',
+  data () {
     return {
       ruleForm: {
-        username: "",
-        password: ""
+        username: '',
+        password: ''
       },
       rules: {
         username: [
-          { required: true, message: "请输入用户名", trigger: "blur" },
-          { min: 5, max: 25, message: "长度在 6 到 25 个字符", trigger: "blur" }
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 5, max: 25, message: '长度在 6 到 25 个字符', trigger: 'blur' }
         ],
         password: [
-          { required: true, message: "请输入密码", trigger: "blur" },
-          { min: 5, max: 25, message: "长度在 6 到 25 个字符", trigger: "blur" }
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 5, max: 25, message: '长度在 6 到 25 个字符', trigger: 'blur' }
         ]
       }
-    };
+    }
   },
   props: [],
   components: {},
@@ -53,51 +53,51 @@ export default {
   created () {},
   methods: {
     gologin () {
-      this.$refs['login_form'].validate(valid => {
+      this.$refs.login_form.validate(valid => {
         if (valid) {
           this.$http
-          .post('https://www.liulongbin.top:8888/api/private/v1/login',this.ruleForm)
-          .then( result =>{
-              console.log("登陆成功返回的数据",result)
-            //   解构赋值
-            const {data:res,meta:{msg,status}} = result.data
-            // 拿到token
-            const {token} =res
-            if(status === 200){
+            .post('/login', this.ruleForm)
+            .then(result => {
+              console.log('登陆成功返回的数据', result)
+              //   解构赋值
+              const { data: res, meta: { msg, status } } = result.data
+              // 拿到token
+              const { token } = res
+              if (status === 200) {
                 // 存token
-              localStorage.setItem('token',token)
+                localStorage.setItem('token', token)
                 // 跳转到首页
-              this.$router.push('/home')
-            //   登陆成功的提示
-             this.$message({
-                message: '登录成功',
-                type: 'success'
-                })
-            // 
-            }
-            if(status === 400){
+                this.$router.push('/home')
+                //   登陆成功的提示
                 this.$message({
-                message: '登录失败',
-                type: 'error'
+                  message: '登录成功',
+                  type: 'success'
                 })
-            }
-          })
-          .catch(error=>{
+                //
+              }
+              if (status === 400) {
+                this.$message({
+                  message: '登录失败',
+                  type: 'error'
+                })
+              }
+            })
+            .catch(error => {
               this.$message({
                 message: '登录失败',
                 type: 'error'
-                })
-          })
+              })
+            })
         } else {
-          console.log("error submit!!");
-          return false;
+          console.log('error submit!!')
+          return false
         }
       })
     }
   },
   watch: {},
   computed: {}
-};
+}
 </script>
 <style>
 .login_form {

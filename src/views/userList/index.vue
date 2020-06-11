@@ -8,10 +8,10 @@
     </el-breadcrumb>
     <el-card class="el_card_box" style="margin-top: 20px;">
       <!-- 1.搜索框，添加用户的按钮 -->
-      <el-input placeholder="请输入内容" v-model="query" style=" width: 300px">
-        <el-button slot="append" icon="el-icon-search"></el-button>
+      <el-input placeholder="请输入内容"  @input.native="searchUser" v-model="pageinfo.query" style=" width: 300px">
+        <el-button slot="append"  icon="el-icon-search" @click="searchUser"></el-button>
       </el-input>
-      <el-button type="primary" class="adduser" style="margin-left:14px">添加用户</el-button>
+      <el-button type="primary" class="adduser" style="margin-left:14px" @click="addUser">添加用户</el-button>
       <!-- 2.用户表格 -->
       <el-table :data="tableData" class="user_table" border style="width: 100%;text-align: center;">
         <el-table-column type="index" label="#" width="80"></el-table-column>
@@ -33,80 +33,178 @@
         <el-table-column prop="address" label="操作"></el-table-column>
       </el-table>
       <!-- 3.添加分页 -->
+       <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="pageinfo.pagenum"
+      :page-sizes="[1, 2, 3, 4]"
+      :page-size="100"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+      style="margin-top:20px">
+    </el-pagination>
+    <!-- 添加用户的一个对话框 -->
+    <el-dialog title="添加用户"  ref="adduser" :rules="userRules" width="400px" :visible.sync="dialogFormVisibleuser">
+  <el-form :model="userForm" label-width="60px"  label-position='left'>
+    <el-form-item label="用户名" >
+      <el-input v-model="userForm.username" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="密码">
+      <el-input v-model="userForm.password" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="邮箱">
+      <el-input v-model="userForm.email" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="手机">
+      <el-input v-model="userForm.mobile" autocomplete="off"></el-input>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="dialogFormVisibleuser = false">取 消</el-button>
+    <el-button type="primary" @click="addUserData">确 定</el-button>
+  </div>
+</el-dialog>
     </el-card>
   </div>
 </template>
 
 <script>
+import _ from 'lodash'
 export default {
-  name: "userList",
-  data() {
+  name: 'userList',
+  data () {
     return {
+      dialogFormVisibleuser: false,
+      //   用户验证会泽
+      userRules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+        ],
+        email: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' },
+          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+        ],
+        mobile: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+        ]
+      },
       pageinfo: {
-        query: "",
-        pagenum: 1,
-        pagesize: 2
+        query: '',
+        pagenum: 1, // 当前页码
+        pagesize: 4 // 显示每页的条数
+      },
+      userForm: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
       },
       total: 0,
       tableData: []
-    };
+    }
   },
   props: [],
   components: {},
-  mounted() {},
-  created() {
-    this.getUserList();
+  mounted () {},
+  created () {
+    this.getUserList()
   },
   methods: {
+    //   向后台确认添加用户
+    addUserData () {
+      //
+    //   console.log(this.userForm)
+      this.$ref.adduser.valide(valid => {
+        if (valid) {
+        //  向后台添加用户数据
+        console.log('ok')
+        } else {
+            // 验证失败
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+    // 添加个用户,显示弹框
+    addUser () {
+      this.dialogFormVisibleuser = true
+    },
+    //   搜索用户
+    searchUser: _.debounce(function () {
+      // 获取去除空格后的输入内容
+    //   const query = this.pageinfo.query.trim()
+    //   query.length === 0 代表搜索全部数据，否则包含有关键字的
+      this.getUserList()
+    }, 300),
     /**
      * query:查询参数可以为空
      * pagenum:当前页码不能为空
      * pagesize:每页显示页数不能为空
      */
     // 获取用户列表
-    getUserList() {
+    getUserList () {
       // 获取token
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token')
       // 配置头信息
-      this.$http.defaults.headers.Authorization = token;
+      this.$http.defaults.headers.Authorization = token
       // 发送ajax请求
       this.$http({
-        method: "get",
-        url: "/users",
+        method: 'get',
+        url: '/users',
         params: this.pageinfo
       }).then(res => {
-        console.log("res:", res);
+        console.log('res:', res)
         // 解构取值
         if (res.data && res.data.data) {
           var {
             data: { pagenum, total, users },
             meta: { msg, status }
-          } = res.data;
+          } = res.data
         } else {
           var {
             meta: { msg, status }
-          } = res.data;
+          } = res.data
         }
         if (status === 200) {
-          this.tableData = users;
-          this.pageinfo.pagenum = pagenum;
-          this.total = total;
+          this.tableData = users
+          this.pageinfo.pagenum = pagenum
+          this.total = total
           this.$message({
             message: msg,
-            type: "success"
-          });
+            type: 'success'
+          })
         } else {
           this.$message({
             message: msg,
-            type: "error"
-          });
+            type: 'error'
+          })
         }
-      });
+      })
+    },
+    // 分页相关的放法
+    // 每页条数不同触发的事件
+    handleSizeChange (val) {
+      this.pageinfo.pagesize = val
+      this.getUserList()
+      console.log(`每页 ${val} 条`)
+    },
+    // 当前页码事件
+    handleCurrentChange (val) {
+      console.log(`当前页: ${val}`)
+      this.pageinfo.pagenum = val
+      this.getUserList()
     }
+    // 结束
   },
   watch: {},
   computed: {}
-};
+}
 </script>
 
 <style>

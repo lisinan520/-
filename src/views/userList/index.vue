@@ -27,10 +27,17 @@
         </el-table-column>
         <el-table-column prop="address" label="状态">
           <template slot-scope="scope">
-            <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+            <el-switch @change="setUserStatus(scope.row)" v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="操作"></el-table-column>
+        <el-table-column prop="address" label="操作">
+            <el-row>
+              <el-button size="mini" type="primary" icon="el-icon-edit" circle></el-button>
+                <el-button size="mini" type="danger" icon="el-icon-delete" circle></el-button>
+              <el-button size="mini" type="warning" icon="el-icon-star-off" circle></el-button>
+            
+            </el-row>
+        </el-table-column>
       </el-table>
       <!-- 3.添加分页 -->
        <el-pagination
@@ -44,18 +51,18 @@
       style="margin-top:20px">
     </el-pagination>
     <!-- 添加用户的一个对话框 -->
-    <el-dialog title="添加用户"  ref="adduser" :rules="userRules" width="400px" :visible.sync="dialogFormVisibleuser">
-  <el-form :model="userForm" label-width="60px"  label-position='left'>
-    <el-form-item label="用户名" >
+    <el-dialog title="添加用户"   width="450px"  :visible.sync="dialogFormVisibleuser">
+  <el-form :model="userForm" label-width="70px" :rules="userRules" ref="adduser" label-position='left'>
+    <el-form-item label="用户名" prop="username" >
       <el-input v-model="userForm.username" autocomplete="off"></el-input>
     </el-form-item>
-    <el-form-item label="密码">
+    <el-form-item label="密码" prop="password">
       <el-input v-model="userForm.password" autocomplete="off"></el-input>
     </el-form-item>
-    <el-form-item label="邮箱">
+    <el-form-item label="邮箱" prop="email">
       <el-input v-model="userForm.email" autocomplete="off"></el-input>
     </el-form-item>
-    <el-form-item label="手机">
+    <el-form-item label="手机" prop="mobile">
       <el-input v-model="userForm.mobile" autocomplete="off"></el-input>
     </el-form-item>
   </el-form>
@@ -116,19 +123,65 @@ export default {
     this.getUserList()
   },
   methods: {
+    // 通过switch改变用户的状态
+    async setUserStatus (user) {
+      const result = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
+      const { meta: { msg, status } } = result.data
+      if (status === 200) {
+        this.$message({
+          message: msg,
+          type: 'success'
+        })
+      } else {
+        this.$message({
+          message: msg,
+          type: 'error'
+        })
+      }
+    },
     //   向后台确认添加用户
     addUserData () {
       //
     //   console.log(this.userForm)
-      this.$ref.adduser.valide(valid => {
+      this.$refs.adduser.validate(valid => {
         if (valid) {
         //  向后台添加用户数据
-        console.log('ok')
+        // 1.添加用户到后台
+          this.$http({
+            method: 'post',
+            url: '/users',
+            data: this.userForm
+          }).then(res => {
+          // 解构获取添加用户的信息
+            const { meta: { msg, status } } = res.data
+            // 3.添加成功给出的提示
+            if (status === 201) {
+            // 创建成功
+              this.$message({
+                message: msg,
+                type: 'success'
+              })
+            } else {
+              this.$message({
+                message: msg,
+                type: 'error'
+              })
+            }
+          })
+          // 2.刷新页面展示已添加的用户
+          this.getUserList()
+          this.userForm = {
+            username: '',
+            password: '',
+            email: '',
+            mobile: ''
+          }
         } else {
-            // 验证失败
+          // 验证失败
           console.log('error submit!!')
           return false
         }
+        this.dialogFormVisibleuser = false
       })
     },
     // 添加个用户,显示弹框

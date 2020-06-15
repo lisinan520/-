@@ -27,6 +27,7 @@
 </template>
 
 <script>
+import { login } from '@/http/api'
 export default {
   name: '',
   data () {
@@ -53,41 +54,15 @@ export default {
   created () {},
   methods: {
     gologin () {
-      this.$refs.login_form.validate(valid => {
+      this.$refs.login_form.validate(async valid => {
         if (valid) {
-          this.$http
-            .post('/login', this.ruleForm)
-            .then(result => {
-              console.log('登陆成功返回的数据', result)
-              //   解构赋值
-              const { data: res, meta: { msg, status } } = result.data
-              // 拿到token
-              const { token } = res
-              if (status === 200) {
-                // 存token
-                localStorage.setItem('token', token)
-                // 跳转到首页
-                this.$router.push('/home')
-                //   登陆成功的提示
-                this.$message({
-                  message: '登录成功',
-                  type: 'success'
-                })
-                //
-              }
-              if (status === 400) {
-                this.$message({
-                  message: '登录失败',
-                  type: 'error'
-                })
-              }
-            })
-            .catch(error => {
-              this.$message({
-                message: '登录失败',
-                type: 'error'
-              })
-            })
+          const result = await login(this.ruleForm)
+          // console.log('登录', result)
+          const { flag } = result
+          if (flag === 2) {
+            // 跳转到首页
+            this.$router.push('/home')
+          }
         } else {
           console.log('error submit!!')
           return false

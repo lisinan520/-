@@ -31,12 +31,13 @@
           </template>
         </el-table-column>
         <el-table-column prop="address" label="操作">
+          <template slot-scope="scope">
             <el-row>
-              <el-button size="mini" type="primary" icon="el-icon-edit" circle></el-button>
-                <el-button size="mini" type="danger" icon="el-icon-delete" circle></el-button>
+              <el-button size="mini" type="primary" icon="el-icon-edit" circle @click="showUserDialog(scope.row)"></el-button>
+              <el-button size="mini" type="danger" icon="el-icon-delete" circle></el-button>
               <el-button size="mini" type="warning" icon="el-icon-star-off" circle></el-button>
-            
             </el-row>
+          </template>
         </el-table-column>
       </el-table>
       <!-- 3.添加分页 -->
@@ -71,17 +72,37 @@
     <el-button type="primary" @click="addUserData">确 定</el-button>
   </div>
 </el-dialog>
+<!-- 编辑 -->
+    <el-dialog title="编辑用户"   width="450px"  :visible.sync="dialogFormVisibleuserDel">
+  <el-form :model="userForm" label-width="70px" :rules="userRules" ref="adduser" label-position='left'>
+    <el-form-item label="用户名" prop="username" >
+      <el-input v-model="userForm.username" disabled autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="邮箱" prop="email">
+      <el-input v-model="userForm.email" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="手机" prop="mobile">
+      <el-input v-model="userForm.mobile" autocomplete="off"></el-input>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="dialogFormVisibleuserDel = false">取 消</el-button>
+    <el-button type="primary" @click.prevent="editUserOk">确 定</el-button>
+  </div>
+</el-dialog>
     </el-card>
   </div>
 </template>
 
 <script>
+import { getUser } from '@/http/api'
 import _ from 'lodash'
 export default {
   name: 'userList',
   data () {
     return {
-      dialogFormVisibleuser: false,
+      dialogFormVisibleuserDel: false, // 编辑状态吗
+      dialogFormVisibleuser: false, // 添加用户状态
       //   用户验证会泽
       userRules: {
         username: [
@@ -123,6 +144,33 @@ export default {
     this.getUserList()
   },
   methods: {
+    // 编辑用户，真正将修改的用户信息添加到数据库
+    async editUserOk () {
+      // console.log('edit', this.userForm)
+      const result = await this.$http.put(`/users/${this.userForm.id}`, this.userForm)
+      const { meta: { msg, status } } = result.data
+      // 3.添加成功给出的提示
+      if (status === 200) {
+        // 创建成功
+        this.$message({
+          message: msg,
+          type: 'success'
+        })
+      } else {
+        this.$message({
+          message: msg,
+          type: 'error'
+        })
+      }
+      this.dialogFormVisibleuserDel = false
+    },
+    // 编辑用户
+    showUserDialog (user) {
+      // 1.先显示弹框
+      this.dialogFormVisibleuserDel = true
+      // 2.显示弹框的内容
+      this.userForm = user
+    },
     // 通过switch改变用户的状态
     async setUserStatus (user) {
       const result = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
@@ -186,6 +234,12 @@ export default {
     },
     // 添加个用户,显示弹框
     addUser () {
+      this.userForm = {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
+      }
       this.dialogFormVisibleuser = true
     },
     //   搜索用户
@@ -201,44 +255,14 @@ export default {
      * pagesize:每页显示页数不能为空
      */
     // 获取用户列表
-    getUserList () {
-      // 获取token
-      const token = localStorage.getItem('token')
-      // 配置头信息
-      this.$http.defaults.headers.Authorization = token
-      // 发送ajax请求
-      this.$http({
-        method: 'get',
-        url: '/users',
-        params: this.pageinfo
-      }).then(res => {
-        console.log('res:', res)
-        // 解构取值
-        if (res.data && res.data.data) {
-          var {
-            data: { pagenum, total, users },
-            meta: { msg, status }
-          } = res.data
-        } else {
-          var {
-            meta: { msg, status }
-          } = res.data
-        }
-        if (status === 200) {
-          this.tableData = users
-          this.pageinfo.pagenum = pagenum
-          this.total = total
-          this.$message({
-            message: msg,
-            type: 'success'
-          })
-        } else {
-          this.$message({
-            message: msg,
-            type: 'error'
-          })
-        }
-      })
+    async getUserList () {
+      const result = await getUser(this.pageinfo)
+      const { flag, result: res } = result
+      if (result.flag === 2) {
+        this.tableData = res.users
+        this.pageinfo.pagenum = res.pagenum
+        this.total = res.total
+      }
     },
     // 分页相关的放法
     // 每页条数不同触发的事件

@@ -10,42 +10,47 @@ export function login (data) {
 }
 // 用户列表接口
 export function getUser (params) {
+// console.log('1111', params)
   return request({
     url: 'users',
-    method: 'post',
+    method: 'get',
     params
   })
 }
 
-// this.$http({
-//     method: 'get',
-//     url: '/users',
-//     params: this.pageinfo
-//   }).then(res => {
-//     console.log('res:', res)
-//     // 解构取值
-//     if (res.data && res.data.data) {
-//       var {
-//         data: { pagenum, total, users },
-//         meta: { msg, status }
-//       } = res.data
-//     } else {
-//       var {
-//         meta: { msg, status }
-//       } = res.data
-//     }
-//     if (status === 200) {
-//       this.tableData = users
-//       this.pageinfo.pagenum = pagenum
-//       this.total = total
-//       this.$message({
-//         message: msg,
-//         type: 'success'
-//       })
-//     } else {
-//       this.$message({
-//         message: msg,
-//         type: 'error'
-//       })
-//     }
-//   })
+// 修改用户状态接口
+export function modifyUserStaus (user) {
+  console.log('11222211', user)
+  return request({
+    url: `users/${user.id}/state/${user.mg_state}`,
+    method: 'put'
+  })
+}
+
+// 编辑用户信息接口
+export function editUserInfo (userid, data) {
+//   console.log('11222211', user)
+  return request({
+    url: `users/${userid}`,
+    method: 'put',
+    data
+  })
+}
+
+// 添加用户信息接口
+export function addUsers (data) {
+  //   console.log('11222211', user)
+  return request({
+    url: '/users',
+    method: 'post',
+    data
+  })
+}
+
+//  删除单个用户
+export function del (userid) {
+  return request({
+    url: `users/${userid}`,
+    method: 'delete'
+  })
+}

@@ -28,13 +28,13 @@ service.interceptors.response.use(function (response) {
     var { data: res, meta: { msg, status } } = response.data
     // 拿到token
     var { token } = res
-    if (status === 400) {
-      Message({
-        message: '登录失败',
-        type: 'error'
-      })
-      Promise.reject(msg)
-    }
+    // if (status === 400) {
+    //   Message({
+    //     message: '登录失败',
+    //     type: 'error'
+    //   })
+    //   Promise.reject(msg)
+    // }
     if (status === 200) {
       // 存token
       token && localStorage.setItem('token', token)
@@ -51,21 +51,27 @@ service.interceptors.response.use(function (response) {
         result: res
       }
       //
+    } else {
+      Message({
+        message: msg,
+        type: 'error'
+      })
+      Promise.reject(msg)
     }
   } else {
     Message({
-      message: '参数有误请检查',
+      message: '参数有误，请检查',
       type: 'error'
     })
     return {
-      msg: '参数有误请检查',
+      msg: msg,
       flag: 1
     }
   }
 }, function (error) {
 //   return Promise.reject(error)
   Message({
-    message: '请求有误请检查',
+    message: '接口请求有误请检查',
     type: 'error'
   })
 })

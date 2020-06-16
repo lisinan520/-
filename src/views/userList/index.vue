@@ -34,7 +34,13 @@
           <template slot-scope="scope">
             <el-row>
               <el-button size="mini" type="primary" icon="el-icon-edit" circle @click="showUserDialog(scope.row)"></el-button>
-              <el-button size="mini" type="danger" icon="el-icon-delete" circle></el-button>
+               <el-button
+                type="danger"
+                size="mini"
+                @click="del(scope.row)"
+                icon="el-icon-delete"
+                circle
+              ></el-button>
               <el-button size="mini" type="warning" icon="el-icon-star-off" circle></el-button>
             </el-row>
           </template>
@@ -95,7 +101,7 @@
 </template>
 
 <script>
-import { getUser } from '@/http/api'
+import { getUser, editUserInfo, modifyUserStaus, addUsers, del } from '@/http/api'
 import _ from 'lodash'
 export default {
   name: 'userList',
@@ -144,24 +150,36 @@ export default {
     this.getUserList()
   },
   methods: {
+    // 删除用户，显示弹框
+    del (user) {
+      console.log('删除用户,显示弹框')
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(async () => {
+          // 调用删除用户接口
+          // console.log('user',user)
+          const res = await del(user.id)
+          // console.log('删除成功',res)
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.getUserList()
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
+    },
     // 编辑用户，真正将修改的用户信息添加到数据库
     async editUserOk () {
-      // console.log('edit', this.userForm)
-      const result = await this.$http.put(`/users/${this.userForm.id}`, this.userForm)
-      const { meta: { msg, status } } = result.data
-      // 3.添加成功给出的提示
-      if (status === 200) {
-        // 创建成功
-        this.$message({
-          message: msg,
-          type: 'success'
-        })
-      } else {
-        this.$message({
-          message: msg,
-          type: 'error'
-        })
-      }
+      const { id, email, mobile } = this.userForm
+      editUserInfo(id, { email, mobile })
       this.dialogFormVisibleuserDel = false
     },
     // 编辑用户
@@ -173,49 +191,15 @@ export default {
     },
     // 通过switch改变用户的状态
     async setUserStatus (user) {
-      const result = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
-      const { meta: { msg, status } } = result.data
-      if (status === 200) {
-        this.$message({
-          message: msg,
-          type: 'success'
-        })
-      } else {
-        this.$message({
-          message: msg,
-          type: 'error'
-        })
-      }
+      const result = modifyUserStaus(user)
     },
     //   向后台确认添加用户
     addUserData () {
-      //
-    //   console.log(this.userForm)
-      this.$refs.adduser.validate(valid => {
+      this.$refs.adduser.validate(async valid => {
         if (valid) {
         //  向后台添加用户数据
-        // 1.添加用户到后台
-          this.$http({
-            method: 'post',
-            url: '/users',
-            data: this.userForm
-          }).then(res => {
-          // 解构获取添加用户的信息
-            const { meta: { msg, status } } = res.data
-            // 3.添加成功给出的提示
-            if (status === 201) {
-            // 创建成功
-              this.$message({
-                message: msg,
-                type: 'success'
-              })
-            } else {
-              this.$message({
-                message: msg,
-                type: 'error'
-              })
-            }
-          })
+          // 1.添加用户到后台
+          await addUsers(this.userForm)
           // 2.刷新页面展示已添加的用户
           this.getUserList()
           this.userForm = {

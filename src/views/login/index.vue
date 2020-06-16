@@ -60,7 +60,6 @@ export default {
           // console.log('登录', result)
           const { flag } = result
           if (flag === 2) {
-            // 跳转到首页
             this.$router.push('/home')
           }
         } else {

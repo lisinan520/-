@@ -1,14 +1,12 @@
 <template>
   <div id="app">
-    <div id="nav">
-    </div>
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
-<style>
-#app{
-  height: 100%;
- 
+<style lang="scss">
+#app {
+  height:100%;
 }
+
 </style>

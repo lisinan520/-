@@ -1,12 +1,7 @@
 <template>
   <div>
     <!-- 面包屑导航 -->
-    <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
-      <el-breadcrumb-item>用户列表</el-breadcrumb-item>
-    </el-breadcrumb>
-
+    <my-brand level1="商品管理" level2="商品列表"></my-brand>
     <el-card class="el_card_box">
       <!-- 1.搜索框，添加用户按钮 -->
       <el-input
@@ -18,32 +13,23 @@
       >
         <el-button slot="append" icon="el-icon-search" @click="searchUser"></el-button>
       </el-input>
-      <el-button type="primary" class="adduser" @click="addUser">添加用户</el-button>
+      <el-button type="primary" class="adduser" @click="addGoods">添加商品</el-button>
 
       <!-- 2.添加用户表格 -->
       <el-table :data="tableData" class="user_table" border style="width: 100%">
         <el-table-column type="index" label="#" width="40"></el-table-column>
-        <el-table-column prop="username" label="姓名" width="180"></el-table-column>
-        <el-table-column prop="email" label="邮箱"></el-table-column>
-        <el-table-column prop="mobile" label="电话"></el-table-column>
-        <el-table-column prop="role_name" label="角色"></el-table-column>
-        <el-table-column label="注册时间">
+        <el-table-column prop="goods_name" label="商品名称" width="180"></el-table-column>
+        <el-table-column prop="goods_price" label="商品价格"></el-table-column>
+        <el-table-column prop="goods_weight" label="商品重量"></el-table-column>
+        <el-table-column prop="goods_number" label="商品数量"></el-table-column>
+        <el-table-column label="创建时间">
           <!-- {{ create_time | date }} -->
           <template slot-scope="scope">
             <i class="el-icon-time"></i>
-            <span style="margin-left: 10px">{{ scope.row.create_time | date }}</span>
+            <span style="margin-left: 10px">{{ scope.row.add_time | date }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态">
-          <template slot-scope="scope">
-            <el-switch
-              v-model="scope.row.mg_state"
-              active-color="#13ce66"
-              inactive-color="#ff4949"
-              @change="setUserStatus(scope.row)"
-            ></el-switch>
-          </template>
-        </el-table-column>
+        
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-row>
@@ -61,8 +47,8 @@
                 circle
                 size="mini"
               ></el-button>
-              <el-button
-                    type="warning"
+              <el-button 
+                    type="warning" 
                     icon="el-icon-star-off"
                     @click="setRoleShowDia(scope.row)"
                     circle size="mini">
@@ -83,7 +69,7 @@
       ></el-pagination>
 
       <!-- 添加用户对话框 -->
-      <el-dialog title="添加用户" :visible.sync="dialogFormVisibleUser">
+      <el-dialog title="添加商品" :visible.sync="dialogFormVisibleUser">
         <el-form
           :model="userForm"
           ref="adduser"
@@ -157,9 +143,9 @@
             <!-- 如果v-model中currentRoleId值和value值一样，则会显示label名 -->
             <el-select v-model="currentRoleId" placeholder="请选择角色">
               <el-option label="请选择用户角色" :value="-1"></el-option>
-              <el-option
+              <el-option 
                   v-for="(item,index) in roles" :key="index"
-                  :label="item.roleName"
+                  :label="item.roleName" 
                   :value="item.id">
               </el-option>
             </el-select>
@@ -175,246 +161,247 @@
 </template>
 
 <script>
-import {
-  getUser,
-  modifyUserStaus,
-  editUserInfo,
-  deleteUser,
-  getRoleList,
-  getUserInfo,
-  getUserRoleInfo,
-  setUserRole
-
-} from '@/http/api'
-import _ from 'lodash'
+import { goodsList } from "@/http/api";
+import _ from "lodash";
 export default {
-  name: 'userlist',
-  data () {
+  name: "goodslist",
+  data() {
     return {
-      // 显示分配角色弹框
-      dialogFormVisiblerole: false,
-      form: {},
-      // 编辑用户的显示状态
+      //显示分配角色弹框
+      dialogFormVisiblerole:false,
+      form:{},
+      //编辑用户的显示状态
       dialogFormVisibleUserDel: false,
       flag: true,
-      // 添加用户验证规则
+      //添加用户验证规则
       userRules: {
         username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+          { required: true, message: "请输入用户名", trigger: "blur" },
+          { min: 6, max: 30, message: "长度在 6 到 30 个字符", trigger: "blur" }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+          { required: true, message: "请输入密码", trigger: "blur" },
+          { min: 6, max: 30, message: "长度在 6 到 30 个字符", trigger: "blur" }
         ],
         email: [
-          { required: true, message: '请输入邮箱', trigger: 'blur' },
-          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+          { required: true, message: "请输入邮箱", trigger: "blur" },
+          { min: 6, max: 30, message: "长度在 6 到 30 个字符", trigger: "blur" }
         ],
         mobile: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+          { required: true, message: "请输入手机号", trigger: "blur" },
+          { min: 6, max: 30, message: "长度在 6 到 30 个字符", trigger: "blur" }
         ]
       },
       pageinfo: {
-        query: '',
-        pagenum: 1, // 当前页码 第1页，第二页
-        pagesize: 2 // 显示每页条数
+        query: "",
+        pagenum: 1, //当前页码 第1页，第二页
+        pagesize: 2 //显示每页条数
       },
       userForm: {
-        username: '',
-        password: '',
-        email: '',
-        mobile: ''
+        username: "",
+        password: "",
+        email: "",
+        mobile: ""
       },
       total: 0,
       tableData: [],
-      // 添加用户的显示状态
+      //添加用户的显示状态
       dialogFormVisibleUser: false,
-      currentRoleId: -1,
-      currentUserName: '',
-      roles: [],
-      currentUserId: ''
+      currentRoleId:-1,
+      currentUserName:'',
+      roles:[],
+      currentUserId:''
 
-    }
+    };
   },
-  created () {
-    this.getUserList()
+  created() {
+    this.getGoodsList();
   },
   methods: {
+      /**
+       * 添加商品
+       */
+    addGoods() {
+       // console.log('addGoods')
+       //this.$router.push('/goodsadd')
+       this.$router.push({path:'/goodsadd'})
+    },
     /**
      * 分配用户角色，调接口
      */
-    async setUserRoleConfirm () {
-      const res = await setUserRole(this.currentUserId, { rid: this.currentRoleId })
-      console.log('分配用户角色:::::::', res)
-      this.dialogFormVisiblerole = false
+    async setUserRoleConfirm() {
+      const res=await setUserRole(this.currentUserId,{rid:this.currentRoleId})
+       console.log('分配用户角色:::::::',res)
+      this.dialogFormVisiblerole=false;
 
-      this.getUserList()
+    
+
     },
     /**
      * 设置用户角色，显示弹框
      */
-    async setRoleShowDia (user) {
-      // 赋值用户名
-      this.currentUserName = user.username
+    async setRoleShowDia(user) {
+      //赋值用户名
+      this.currentUserName=user.username
 
-      // 赋值用户id
-      this.currentUserId = user.id
-      // 获取用户角色列表
-      const res = await getRoleList()
-      // 获取用户角色id
-      const res2 = await getUserInfo(user.id)
+      //赋值用户id
+      this.currentUserId=user.id
+      //获取用户角色列表
+      const res=await getRoleList();
+      //获取用户角色id
+      const res2=await getUserInfo(user.id);
+    
+     // this.currentRoleId=res2.result.rid
 
-      // this.currentRoleId=res2.result.rid
+      let roleid=res2.result.rid;
 
-      const roleid = res2.result.rid
+      //通过角色id获取用户角色
+      const res3=await getUserRoleInfo(roleid);
+     
 
-      // 通过角色id获取用户角色
-      const res3 = await getUserRoleInfo(roleid)
-
-      if (!res3) {
+      if(!res3) {
         this.$message({
-          message: '该用户还没有分配角色',
-          type: 'warning'
+          message:'该用户还没有分配角色',
+          type:'warning'
         })
       }
 
-      this.roles = res.result
-      this.dialogFormVisiblerole = true
+      this.roles=res.result;   
+      this.dialogFormVisiblerole=true;
+
     },
     /**
      * 删除用户，显示弹框
      */
-    deleteUserShowDia (user) {
-      this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+    deleteUserShowDia(user) {
+      this.$confirm("此操作将永久删除该用户, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
       })
         .then(async () => {
-          // 调用删除用户的接口
+          //调用删除用户的接口
           // console.log('当前要删除的用户信息：',user)
-          const res = await deleteUser(user.id)
+          const res = await deleteUser(user.id);
 
           this.$message({
-            type: 'success',
-            message: '删除成功!'
-          })
+            type: "success",
+            message: "删除成功!"
+          });
 
-          this.getUserList()
+        //  this.getUserList();
         })
         .catch(() => {
           this.$message({
-            type: 'info',
-            message: '已取消删除'
-          })
-        })
+            type: "info",
+            message: "已取消删除"
+          });
+        });
     },
     /**
      * 编辑用户，真正将修改的用户信息写入后台数据库
      */
-    async editUserOk () {
-      const { id, email, mobile } = this.userForm
+    async editUserOk() {
+      let { id, email, mobile } = this.userForm;
 
-      editUserInfo(id, { email, mobile })
+      editUserInfo(id, { email, mobile });
 
-      this.dialogFormVisibleUserDel = false
+      this.dialogFormVisibleUserDel = false;
     },
     /**
      * 编辑用户信息,打开编辑用户对话框
      */
-    showUserDialog (user) {
-      // 1.先显示弹框
-      this.dialogFormVisibleUserDel = true
-      // 2.显示要编辑的内容
-      this.userForm = user
+    showUserDialog(user) {
+      //1.先显示弹框
+      this.dialogFormVisibleUserDel = true;
+      //2.显示要编辑的内容
+      this.userForm = user;
     },
     /**
      * 通过switch改变用户的状态
      */
-    async setUserStatus (user) {
+    async setUserStatus(user) {
       // `users/${user.id}/state/${user.mg_state}`
 
-      const result = modifyUserStaus(user)
-      console.log('修改用户状态：', result)
+      const result = modifyUserStaus(user);
+      console.log("修改用户状态：", result);
     },
     /**
      * 向后台确认添加新用户
      */
-    addUserData () {
+    addUserData() {
       /**
        * 添验证规则步骤：
        * 1.给el-for绑定 :rules属性，规则
        */
 
-      // console.log(this.userForm)
+      //console.log(this.userForm)
       this.$refs.adduser.validate(valid => {
         if (valid) {
-          // 向后台添加用户数据
-          // 1.添加到数据到后台
+          //向后台添加用户数据
+          //1.添加到数据到后台
           this.$http({
-            method: 'post',
-            url: '/users',
+            method: "post",
+            url: "/users",
             data: this.userForm
           }).then(res => {
-            console.log(res)
-            // 解构获取添加用户的信息
+            console.log(res);
+            //解构获取添加用户的信息
             const {
               meta: { msg, status }
-            } = res.data
-            // 添加成功给出成功提示
+            } = res.data;
+            //添加成功给出成功提示
             if (status === 201) {
               this.$message({
                 message: msg,
-                type: 'success'
-              })
+                type: "success"
+              });
             } else {
               this.$message({
                 message: msg,
-                type: 'error'
-              })
+                type: "error"
+              });
             }
-          })
-          // 2.刷新页面展示已添加的用户
-          this.getUserList()
+          });
+          //2.刷新页面展示已添加的用户
+         // this.getUserList();
           this.userForm = {
-            username: '',
-            password: '',
-            email: '',
-            mobile: ''
-          }
+            username: "",
+            password: "",
+            email: "",
+            mobile: ""
+          };
         } else {
-          // 验证失败
-          console.log('error submit!!')
-          return false
+          //验证失败
+          console.log("error submit!!");
+          return false;
         }
 
-        this.dialogFormVisibleUser = false
-      })
+        this.dialogFormVisibleUser = false;
+      });
     },
     /**
      * 添加用户，显示弹框
      */
-    addUser () {
+    addUser() {
       this.userForm = {
-        username: '',
-        password: '',
-        email: '',
-        mobile: ''
-      }
-      this.dialogFormVisibleUser = true
+        username: "",
+        password: "",
+        email: "",
+        mobile: ""
+      };
+      this.dialogFormVisibleUser = true;
     },
     /**
      * 搜索用户
      */
     searchUser: _.throttle(
-      function () {
-        // 获取去除空格后的输入内容
+      function() {
+        //获取去除空格后的输入内容
         // this.pageinfo.query=this.pageinfo.query.trim()
-        // query.length===0代表搜索全部用户列表，否则搜索包含有关键字的用户列表
+        //query.length===0代表搜索全部用户列表，否则搜索包含有关键字的用户列表
         // let _this=this;
-        this.getUserList()
+      //  this.getUserList();
       },
       3000,
       { leading: false }
@@ -424,32 +411,33 @@ export default {
      * pagenum:当前页码不能为空
      * pagesize:每页显示条数不能为空
      */
-    // 获取用户列表
-    async getUserList () {
-      const result = await getUser(this.pageinfo)
-      const { flag, result: res } = result
+    //获取用户列表
+    async getGoodsList() {
+      const result = await goodsList(this.pageinfo);
+      console.log('result:',result)
+      let { flag, result: res } = result;
       if (result.flag === 2) {
-        this.tableData = res.users
-        this.pageinfo.pagenum = res.pagenum
-        this.total = res.total
+        this.tableData = res.goods;
+        this.pageinfo.pagenum = res.pagenum*1;
+        this.total = res.total;
       }
     },
-    // 分页相关的方法
-    // 每页条数不同时触发的方法
-    handleSizeChange (val) {
-      console.log(`每页 ${val} 条`)
-      this.pageinfo.pagesize = val
-      this.getUserList()
+    //分页相关的方法
+    //每页条数不同时触发的方法
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+      this.pageinfo.pagesize = val;
+      this.getGoodsList();
     },
 
-    // 当前页码方法
-    handleCurrentChange (val) {
-      console.log(`当前页: ${val}`)
-      this.pageinfo.pagenum = val
-      this.getUserList()
+    //当前页码方法
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+      this.pageinfo.pagenum = val;
+      this.getGoodsList();
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>

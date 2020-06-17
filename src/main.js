@@ -1,38 +1,86 @@
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
+import Vue from "vue";
+import App from "./App.vue";
+import router from "./router";
 import moment from 'moment'
-import store from './store'
-// 引用reset.css
-import '@/assets/css/reset.css'
-import ElementUI from 'element-ui'
-import 'element-ui/lib/theme-chalk/index.css'
+import store from "./store";
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+
+//引入面包屑组件
+import myBrand from '@/components/brand_com'
+
+Vue.config.productionTip = false;
+
 import Axios from 'axios'
-Vue.use(ElementUI)
-Vue.config.productionTip = false
-Vue.prototype.$http = Axios
-// url
-Axios.defaults.baseURL = 'https://www.liulongbin.top:8888/api/private/v1'
-// 创建一个日期全局过滤器
-Vue.filter('date', function () {
-  return moment().format('YYYY-MM-DD')
+moment.locale('zh-cn')
+
+//Vue全局面包屑组件
+Vue.component(myBrand.name, myBrand)
+
+//创建一个日期的全局过滤器
+//Vue.filter('过滤器名',函数)
+Vue.filter('date', function (t) {
+   return moment(t).format("YYYY-MM-DD h:mm:ss a")
 })
-// 全局路由守卫
+
+Vue.filter('levelFn', function (num) {
+  let result = ''
+  switch (num) {
+    case '0' : result = '一级'; break;
+    case '1' : result = '二级'; break;
+    case '2': result = '三级'; break;
+    default : result='没有级别'
+  }
+  
+  return result;
+})
+
+
+//引入reset   @===src
+import '@/assets/css/reset.css'
+
+//全局路由守卫
 router.beforeEach((to, from, next) => {
-  console.log('to', to)
-  const token = localStorage.getItem('token')
-  if (to.meta.Authorition) {
-    if (token) {
-      next()
+  const token = localStorage.getItem('token');
+  //some是数组的遍历方法，只要任意一个数组元素是true,就返回true
+  if (to.matched.some(item => item.meta.Authorition)) {
+    if (!token) {
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }  //记录我从哪个路由跳转到登录组件的
+      })
     } else {
-      router.push({ name: 'login' })
+      next()
     }
+
   } else {
     next()
   }
 })
+
+
+
+//   if (to.meta.Authorition) {
+//     if (!token) {
+//       // next()
+//       next({
+//         path: '/login',
+//         query: { redirect: to.fullPath }
+//       })
+//     } else {
+//       next()
+//      }
+//   } else {
+//     next()
+//   }
+  
+// })
+
+
+Vue.use(ElementUI);
+
 new Vue({
   router,
   store,
   render: h => h(App)
-}).$mount('#app')
+}).$mount("#app");
